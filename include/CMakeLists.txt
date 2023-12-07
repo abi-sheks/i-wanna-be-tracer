@@ -1,0 +1,1 @@
+add_library(include vec3.cpp color.cpp)
