@@ -1,5 +1,6 @@
 #pragma once
 #include <limits>
+#include <cmath>
 #include <cstdlib>
 
 const double infinity = std::numeric_limits<double>::infinity();
@@ -15,4 +16,8 @@ inline double randomDouble() {
 }
 inline double randomDouble(double min, double max) {
     return min + (max-min)*randomDouble();
+}
+inline double linearToGamma(double linear)
+{
+    return sqrt(linear);
 }

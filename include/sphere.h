@@ -1,12 +1,14 @@
 #pragma once
 
+#include <memory>
 #include "hittable.h"
 #include "interval.h"
+#include "material.h"
 
 class Sphere : public Hittable
 {
 public:
-    Sphere(Point3 _center, double _radius) : center(_center), radius(_radius) {}
+    Sphere(Point3 _center, double _radius, std::shared_ptr<Material> _mat) : center(_center), radius(_radius), mat(_mat) {}
 
     bool hit(const Ray &ray, Interval t_limit, hit_info &info) const override
     {
@@ -39,6 +41,7 @@ public:
 
         info.t = root;
         info.p = ray.at(info.t);
+        info.mat = mat;
         //need unit vector, length of normal vector to sphere is radius
         vec3 outward_normal = (info.p - center) / radius;
         info.set_normal_face(ray, outward_normal);     
@@ -48,4 +51,5 @@ public:
 private:
     Point3 center;
     double radius;
+    std::shared_ptr<Material> mat;
 };

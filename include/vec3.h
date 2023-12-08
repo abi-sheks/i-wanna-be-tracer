@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <cmath>
+#include "utilities.h"
 
 using std::sqrt;
 
@@ -65,6 +66,20 @@ public:
                     comp[2] * v.comp[0] - comp[0] * v.comp[2],
                     comp[0] * v.comp[1] - comp[1] * v.comp[0]);
     }
+    static vec3 random()
+    {
+        return vec3(randomDouble(), randomDouble(), randomDouble());
+    }
+    static vec3 random(double min, double max)
+    {
+        return vec3(randomDouble(min, max), randomDouble(min, max), randomDouble(min, max));
+    }
+    bool near_zero() const
+    {
+        // Return true if the vector is close to zero in all dimensions.
+        auto s = 1e-8;
+        return (fabs(comp[0]) < s) && (fabs(comp[1]) < s) && (fabs(comp[2]) < s);
+    }
 };
 
 using Point3 = vec3; // alias for readability
@@ -105,7 +120,41 @@ inline vec3 operator/(vec3 v, double t)
     return (1 / t) * v;
 }
 
-//need to define here as it depends on above overload
-inline vec3 normalize(vec3 v) {
+// need to define here as it depends on above overload
+inline vec3 normalize(vec3 v)
+{
     return v / v.length();
+}
+
+inline vec3 randomInUnitSphere()
+{
+    while (true)
+    {
+        auto p = vec3::random(-1, 1);
+        if (p.sqrLength() < 1)
+        {
+            return p;
+        }
+    }
+}
+inline vec3 randomUnitVec()
+{
+    return normalize(randomInUnitSphere());
+}
+inline vec3 randomOnHemisphere(const vec3 &normal)
+{
+    vec3 on_unit_sphere = randomUnitVec();
+    if (on_unit_sphere.dot(normal) > 0.0)
+    {
+        return on_unit_sphere;
+    }
+    else
+    {
+        return -on_unit_sphere;
+    }
+}
+
+vec3 reflect(vec3 &v, const vec3 &normal)
+{
+    return v - 2 * v.dot(normal) * normal;
 }

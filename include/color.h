@@ -1,8 +1,10 @@
 #pragma once
 
 #include "vec3.h"
-#include <iostream>
 #include "interval.h"
+#include "utilities.h"
+#include <iostream>
+
 
 using Color = vec3;
 
@@ -18,6 +20,11 @@ void writeColor(std::ostream &out, Color pixel_color, int samples_per_pixel)
     r *= scale;
     g *= scale;
     b *= scale;
+
+    //convert with gamma 2
+    r = linearToGamma(r);
+    g = linearToGamma(g);
+    b = linearToGamma(b);
 
     // to clamp values bw 0.0 to 1.0
     static Interval intensity(0.000, 0.999);

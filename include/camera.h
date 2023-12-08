@@ -7,6 +7,7 @@
 #include "vec3.h"
 #include "ray.h"
 #include "color.h"
+#include "material.h"
 
 class Camera
 {
@@ -14,8 +15,9 @@ public:
     double aspect_ratio;
     int img_width;
     int samples_per_pixel;
+    int max_depth;
 
-    Camera(double _ar, int _img_width, int _samples_per_pixel) : aspect_ratio(_ar), img_width(_img_width), samples_per_pixel(_samples_per_pixel) {}
+    Camera(double _ar, int _img_width, int _samples_per_pixel, int _max_depth) : aspect_ratio(_ar), img_width(_img_width), samples_per_pixel(_samples_per_pixel), max_depth(_max_depth) {}
 
     void render(Hittable &world)
     {
@@ -35,7 +37,7 @@ public:
                 {
                     // returns and adds random sample from 0.5 square with pixel at centre
                     Ray r = getRay(i, j);
-                    pixel_color += rayColor(r, world);
+                    pixel_color += rayColor(r, max_depth, world);
                 }
                 writeColor(std::cout, pixel_color, samples_per_pixel);
             }
@@ -74,19 +76,39 @@ private:
         auto viewport_upleft_edge = camera_center - vec3(0, 0, focal_length) - (viewport_u / 2) - (viewport_v / 2);
         pixel_top_left = viewport_upleft_edge + (0.5 * pixel_distance_u) + (0.5 * pixel_distance_v);
     }
-    Color rayColor(const Ray &r, const Hittable &world)
+    Color rayColor(const Ray &r, int depth, const Hittable &world)
     {
         hit_info info;
-        if (world.hit(r, Interval(0, infinity), info))
+
+        //to prevent that nasty seg fault u were getting
+        if(depth <= 0)
         {
-            return 0.5 * Color(info.normal.x() + 1, info.normal.y() + 1, info.normal.z() + 1);
+            return Color(0, 0, 0);
+        }
+        //interval starts from small t to fix shadow acne
+        //shadow acne was actually the issue causing major runtime lag and visual defect for me.
+        //reintersection is a bitch.
+        if (world.hit(r, Interval(0.001, infinity), info))
+        {
+            //understand the geometric meaning of this recursive call, basically how the rays travel on each rayColor
+            //first call from render will give ray bw camera and sample point
+            //this internal call simulates the ray bouncing off randomly. It'll most probably not collide elsewhere so it'll move on to the 
+            //below lerp and provide a color based on its random y value.
+            Ray scattered;
+            Color attenuation; //learn what these are in depth asap
+            //so for lambertian, we took attenuation = 0.5, scattered ofc based on principle
+            if(info.mat->scatter(r, info, attenuation, scattered))
+            {
+                return attenuation*rayColor(scattered, depth - 1, world);
+            }
+            return Color(0, 0, 0);
         }
         // lerps based on y value
         vec3 unit_direction = normalize(r.direction());
         // for parameter a
         auto a = 0.5 * (unit_direction.y() + 1.0);
         // start color (a = 0) - white, end color (a = 1) - blue
-        return (1.0 - a) * Color(1.0, 1.0, 1.0) + a * Color(0.0, 0.0, 1.0);
+        return (1.0 - a) * Color(1.0, 1.0, 1.0) + a * Color(0.5, 0.7, 1.0);
     }
 
     Ray getRay(int i, int j)
