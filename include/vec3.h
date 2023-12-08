@@ -67,7 +67,7 @@ public:
     }
 };
 
-using point3 = vec3; // alias for readability
+using Point3 = vec3; // alias for readability
 
 inline std::ostream &operator<<(std::ostream &out, const vec3 &v)
 {

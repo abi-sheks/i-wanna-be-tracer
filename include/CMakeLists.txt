@@ -1,1 +1,1 @@
-add_library(include vec3.cpp color.cpp)
+add_library(include file.cpp vec3.h color.h ray.h hittable.h sphere.h utilities.h hittable_array.h interval.h camera.h)

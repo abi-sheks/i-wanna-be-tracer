@@ -1,25 +1,16 @@
 #include <iostream>
-#include "vec3.h"
-#include "color.h"
+#include <memory>
+#include "camera.h"
+#include "sphere.h"
+#include "hittable_array.h"
 
 int main()
 {
-    int img_width = 256;
-    int img_height = 256;
+    HittableArray world;
+    world.add(std::make_shared<Sphere>(Point3(0, 0, -1), 0.5));
+    world.add(std::make_shared<Sphere>(Point3(0, -100.5, -1), 100));
 
-    std::cout << "P3\n"
-              << img_width << " " << img_height << "\n255\n";
+    Camera camera(16.0 / 9.0, 400, 100);
+    camera.render(world);
 
-    for (int j = 0; j < img_height; ++j)
-    {
-        std::clog<< "\rLines remaining" << (img_height - j) << ' ' << std::flush; 
-        for (int i = 0; i < img_width; ++i)
-        {
-            //for normalization to 0.0.to 1.0 then map to 0 to 255 inside writeColor
-            auto pixel_color = color(double(i) / (img_width - 1), double(j) / (img_height - 1), 0);
-            writeColor(std::cout, pixel_color);
-        }
-    }
-
-    std::clog<<"\rDone.           \n";
 }
