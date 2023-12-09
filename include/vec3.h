@@ -153,8 +153,23 @@ inline vec3 randomOnHemisphere(const vec3 &normal)
         return -on_unit_sphere;
     }
 }
+inline vec3 randomInUnitDisk() {
+    while (true) {
+        auto p = vec3(randomDouble(-1,1), randomDouble(-1,1), 0);
+        if (p.sqrLength() < 1)
+            return p;
+    }
+}
 
-vec3 reflect(vec3 &v, const vec3 &normal)
+inline vec3 reflect(vec3 &v, const vec3 &normal)
 {
     return v - 2 * v.dot(normal) * normal;
+}
+
+inline vec3 refract(vec3& v, const vec3& normal, double eta_ibyr)
+{   
+    auto cos_theta = fmin(-v.dot(normal), 1.0);
+    auto r_out_perpendicular = eta_ibyr*(v + cos_theta*normal);
+    auto r_out_parallel = -sqrt(fabs(1 - r_out_perpendicular.sqrLength())) * normal;
+    return r_out_parallel + r_out_perpendicular;
 }
