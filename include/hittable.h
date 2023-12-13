@@ -3,6 +3,7 @@
 #include <memory>
 #include "vec3.h"
 #include "ray.h"
+#include "aabb.h"
 #include "interval.h"
 
 class Material;
@@ -15,6 +16,9 @@ public:
     std::shared_ptr<Material> mat;
     // uses strategy of always setting normal opposite to incoming ray
     bool front_face;
+    //texels
+    double u;
+    double v;
 
     void set_normal_face(const Ray &r, vec3 &outward_normal)
     {
@@ -30,4 +34,6 @@ public:
     virtual ~Hittable() = default;
 
     virtual bool hit(const Ray &ray, Interval t_limits, hit_info &info) const = 0;
+
+    virtual AABB boundingBox() const = 0;
 };

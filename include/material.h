@@ -4,6 +4,7 @@
 #include "hittable.h"
 #include "ray.h"
 #include "color.h"
+#include "texture.h"
 
 class hit_info;
 
@@ -18,7 +19,8 @@ public:
 class Lambertian : public Material
 {
 public:
-    Lambertian(const Color &col) : albedo(col) {}
+    Lambertian(const Color &col) : albedo(std::make_shared<SolidColor>(col)) {}
+    Lambertian(std::shared_ptr<Texture> tex) : albedo(tex) {}
     bool scatter(const Ray &ray_in, hit_info &info, Color &attenuation, Ray &scattered) const override
     {
         // always scatters
@@ -30,14 +32,14 @@ public:
         {
             scatter_direction = info.normal;
         }
-        scattered = Ray(info.p, scatter_direction);
-        attenuation = albedo;
+        scattered = Ray(info.p, scatter_direction, ray_in.time());
+        attenuation = albedo->value(info.u, info.v, info.p);
         return true;
     }
 
 private:
     // albedo = proportion of incident light reflected.
-    Color albedo;
+    std::shared_ptr<Texture> albedo;
 };
 class Metal : public Material
 {
@@ -47,7 +49,7 @@ public:
     {
         vec3 dir = normalize(ray_in.direction());
         vec3 reflected_direction = reflect(dir, info.normal);
-        scattered = Ray(info.p, reflected_direction + fuzz * randomUnitVec());
+        scattered = Ray(info.p, reflected_direction + fuzz * randomUnitVec(), ray_in.time());
         attenuation = albedo;
         // to count out reflections below the surface
         return info.normal.dot(scattered.direction());
@@ -83,7 +85,7 @@ public:
         {
             scattered_direction = refract(unit_dir, info.normal, refractive_ibyr);
         }
-        scattered = Ray(info.p, scattered_direction); 
+        scattered = Ray(info.p, scattered_direction, ray_in.time()); 
         return true;
     }
 

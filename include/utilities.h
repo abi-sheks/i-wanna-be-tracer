@@ -17,6 +17,11 @@ inline double randomDouble() {
 inline double randomDouble(double min, double max) {
     return min + (max-min)*randomDouble();
 }
+inline int randomInt(int min, int max)
+{
+    //in [min, max]
+    return static_cast<int>(randomDouble(min, max+1));
+}
 inline double linearToGamma(double linear)
 {
     return sqrt(linear);

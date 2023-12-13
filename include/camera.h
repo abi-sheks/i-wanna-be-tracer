@@ -155,7 +155,9 @@ private:
         //gets a random point on defocus disk, or camera center if angle <= 0.
         auto origin = (defocus_angle <= 0) ? camera_center : defocusDiskSample();
         auto direction_from_cam = pixel_sample - camera_center;
-        return Ray(origin, direction_from_cam);
+        //sends out rays at random times
+        auto ray_time = randomDouble();
+        return Ray(origin, direction_from_cam, ray_time);
     }
     vec3 pixelSampleSquare()
     {

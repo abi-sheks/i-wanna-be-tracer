@@ -2,6 +2,7 @@
 
 #include "hittable.h"
 #include "interval.h"
+#include "aabb.h"
 #include <memory>
 #include <vector>
 
@@ -18,7 +19,11 @@ public:
     void add(std::shared_ptr<Hittable> object)
     {
         objects.push_back(object);
+        //incrementing the box volume incrementally for each object, taking advantage of property of AABB constructor and Interval constructor
+        bbox = AABB(bbox, object->boundingBox());
     }
+
+    AABB boundingBox() const override {return bbox;}
 
     // using a paradigm where hasA logic is shifted to isA logic
     // usually i would not inherit, and do the following function for each object in HittableArray elsewhere.
@@ -44,4 +49,6 @@ public:
 
         return hit_anything;
     }
+    private:
+    AABB bbox;
 };
