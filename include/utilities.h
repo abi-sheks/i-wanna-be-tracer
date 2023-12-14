@@ -26,3 +26,9 @@ inline double linearToGamma(double linear)
 {
     return sqrt(linear);
 }
+inline void swapInt(int*a, int*b)
+{
+    int temp = *a;
+    *a = *b;
+    *b = temp;
+}

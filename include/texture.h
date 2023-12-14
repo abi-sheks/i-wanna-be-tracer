@@ -3,6 +3,7 @@
 #include "vec3.h"
 #include "image.h"
 #include "color.h"
+#include "perlin.h"
 
 class Texture
 {
@@ -64,15 +65,33 @@ public:
         u = Interval(0, 1).clamp(u);
         v = 1.0 - Interval(0, 1).clamp(v);
 
-        //converting to image coordinates
+        // converting to image coordinates
         auto i = static_cast<int>(u * image.width());
         auto j = static_cast<int>(v * image.height());
         auto pixel = image.pixelData(i, j);
         auto color_scale = 1.0 / 255.0;
-        //to scale down rgb values bw 0 and 1.
+        // to scale down rgb values bw 0 and 1.
         return Color(color_scale * pixel[0], color_scale * pixel[1], color_scale * pixel[2]);
     }
 
 private:
     Image image;
+};
+
+class NoiseTexture : public Texture
+{
+public:
+    NoiseTexture() : frequency(1) {}
+    NoiseTexture(double _frequency) : frequency(_frequency) {}
+    Color value(double u, double v, const Point3 &point) const override
+    {
+        //0.5*(1.0 + )to handle cases where perlin interpretation gives negative value, (sqrt of that will give NaN)
+        //marble texture achieved by making color proportional to some sine function, and shifting its phase by turbulence
+        auto scaled = frequency*point;
+        return Color(1.0, 1.0, 1.0)*0.5*(1.0 + sin(scaled.z() + 10*noise.turbulence(scaled)));
+    }
+
+private:
+    Perlin noise;
+    double frequency;
 };

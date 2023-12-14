@@ -20,10 +20,10 @@ public:
     double u;
     double v;
 
-    void set_normal_face(const Ray &r, vec3 &outward_normal)
+    void setNormalFace(const Ray &r, const vec3& outward_normal)
     {
         // checks if ray is coming from outside the sphere, or from inside the sphere
-        front_face = outward_normal.dot(r.direction()) < 0;
+        front_face = r.direction().dot(outward_normal) < 0;
         normal = front_face ? outward_normal : -outward_normal;
     }
 };

@@ -4,9 +4,10 @@
 #include "texture.h"
 #include "sphere.h"
 #include "bvh_node.h"
+#include "quad.h"
 #include "hittable_array.h"
 
-void book_1_scene()
+void finalBookOneScene()
 {
     HittableArray world;
 
@@ -32,7 +33,7 @@ void book_1_scene()
                     auto albedo = Color::random() * Color::random();
                     sphere_material = std::make_shared<Lambertian>(albedo);
                     Point3 center_end = center + vec3(0, randomDouble(0, 0.5), 0);
-                    world.add(std::make_shared<Sphere>(center, center_end, 0.2, sphere_material));
+                    world.add(std::make_shared<Sphere>(center, 0.2, sphere_material));
                 }
                 else if (choose_mat < 0.95)
                 {
@@ -81,11 +82,11 @@ void book_1_scene()
     // Camera camera = Camera();
 
     // for final render
-    Camera camera = Camera(16.0 / 9.0, 400, 100, 10, 20.0, Point3(13, 2, 3), Point3(0, 0, 0), vec3(0, 1, 0), 0.6, 10.0);
+    Camera camera = Camera(16.0 / 9.0, 400, 400, 100, 20.0, Point3(13, 2, 3), Point3(0, 0, 0), vec3(0, 1, 0), 0.6, 10.0);
     camera.render(world);
 }
 
-void two_spheres()
+void twoSpheres()
 {
     HittableArray world;
 
@@ -134,18 +135,83 @@ void earth()
     cam.render(world);
 }
 
+void perlinSphere()
+{
+    HittableArray world;
+
+    auto pertext = std::make_shared<NoiseTexture>(4);
+    world.add(std::make_shared<Sphere>(Point3(0, -1000, 0), 1000, std::make_shared<Lambertian>(pertext)));
+    world.add(std::make_shared<Sphere>(Point3(0, 2, 0), 2, std::make_shared<Lambertian>(pertext)));
+
+    Camera cam;
+
+    cam.aspect_ratio = 16.0 / 9.0;
+    cam.img_width = 400;
+    cam.samples_per_pixel = 100;
+    cam.max_depth = 50;
+
+    cam.vfov = 20;
+    cam.lookFrom = Point3(13, 2, 3);
+    cam.lookAt = Point3(0, 0, 0);
+    cam.vup = vec3(0, 1, 0);
+
+    cam.defocus_angle = 0;
+
+    cam.render(world);
+}
+void quads()
+{
+    HittableArray world;
+
+    // Materials
+    auto left_red = std::make_shared<Lambertian>(Color(1.0, 0.2, 0.2));
+    auto back_green = std::make_shared<Lambertian>(Color(0.2, 1.0, 0.2));
+    auto right_blue = std::make_shared<Lambertian>(Color(0.2, 0.2, 1.0));
+    auto upper_orange = std::make_shared<Lambertian>(Color(1.0, 0.5, 0.0));
+    auto lower_teal = std::make_shared<Lambertian>(Color(0.2, 0.8, 0.8));
+
+    // Quads
+    world.add(std::make_shared<Quad>(Point3(-3, -2, 5), vec3(0, 0, -4), vec3(0, 4, 0), left_red));
+    world.add(std::make_shared<Quad>(Point3(-2, -2, 0), vec3(4, 0, 0), vec3(0, 4, 0), back_green));
+    world.add(std::make_shared<Quad>(Point3(3, -2, 1), vec3(0, 0, 4), vec3(0, 4, 0), right_blue));
+    world.add(std::make_shared<Quad>(Point3(-2, 3, 1), vec3(4, 0, 0), vec3(0, 0, 4), upper_orange));
+    world.add(std::make_shared<Quad>(Point3(-2, -3, 5), vec3(4, 0, 0), vec3(0, 0, -4), lower_teal));
+
+    Camera cam;
+
+    cam.aspect_ratio = 1.0;
+    cam.img_width = 400;
+    cam.samples_per_pixel = 100;
+    cam.max_depth = 50;
+
+    cam.vfov = 80;
+    cam.lookFrom = Point3(0, 0, 9);
+    cam.lookAt = Point3(0, 0, 0);
+    cam.vup = vec3(0, 1, 0);
+
+    cam.defocus_angle = 0;
+
+    cam.render(world);
+}
+
 int main()
 {
-    switch (3)
+    switch (5)
     {
     case 1:
-        book_1_scene();
+        finalBookOneScene();
         break;
     case 2:
-        two_spheres();
+        twoSpheres();
         break;
     case 3:
         earth();
+        break;
+    case 4:
+        perlinSphere();
+        break;
+    case 5:
+        quads();
         break;
     }
 }

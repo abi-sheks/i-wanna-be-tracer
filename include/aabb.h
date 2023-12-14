@@ -23,7 +23,15 @@ public:
         y = Interval(box0.y, box1.y);
         z = Interval(box0.z, box1.z);
     }
-
+    //for 2D quadrilaterals, which will have zero dimension along some axis
+    AABB pad()
+    {
+        double delta = 0.0001;
+        Interval _x = (x.size() >= delta) ? x : x.expand(delta);
+        Interval _y = (y.size() >= delta) ? y : y.expand(delta);
+        Interval _z = (z.size() >= delta) ? z : z.expand(delta);
+        return AABB(_x, _y, _z);
+    }
     const Interval &getAxis(int n) const
     {
         // relevant to hit function

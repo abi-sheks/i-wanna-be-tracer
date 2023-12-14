@@ -69,7 +69,7 @@ public:
         info.mat = mat;
         // need unit vector, length of normal vector to sphere is radius
         vec3 outward_normal = (info.p - center) / radius;
-        info.set_normal_face(ray, outward_normal);
+        info.setNormalFace(ray, outward_normal);
         getSphereUV(outward_normal, info.u, info.v);
         return true;
     }
