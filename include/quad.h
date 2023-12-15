@@ -3,6 +3,7 @@
 #include "material.h"
 #include "aabb.h"
 #include "hittable.h"
+#include "hittable_array.h"
 #include "vec3.h"
 #include "ray.h"
 #include "interval.h"
@@ -82,3 +83,26 @@ private:
     // for checking if poi is in plane, there is a clear derivation using u, v as basis vectors for quad region.
     vec3 w;
 };
+
+inline std::shared_ptr<HittableArray> box(const Point3& p1, const Point3& p2, std::shared_ptr<Material> mat)
+{
+    //returns 3D box with p1 and p2 as opposite vertices
+    std::shared_ptr<HittableArray> box = std::make_shared<HittableArray>();
+
+    //extrema vertices
+    auto min = Point3(fmin(p1.x(), p2.x()), fmin(p1.y(), p2.y()), fmin(p1.z(), p2.z()));
+    auto max = Point3(fmax(p1.x(), p2.x()), fmax(p1.y(), p2.y()), fmax(p1.z(), p2.z()));
+    auto dx = vec3(max.x() - min.x(), 0, 0);
+    auto dy = vec3(0, max.y() - min.y(), 0);
+    auto dz = vec3(0, 0, max.z() - min.z());
+
+    //adding each side
+    box->add(std::make_shared<Quad>(Point3(min.x(), min.y(), max.z()), dx, dy, mat)); //front
+    box->add(std::make_shared<Quad>(Point3(min.x(), max.y(), max.z()), dx, -dz, mat)); //top
+    box->add(std::make_shared<Quad>(Point3(max.x(), min.y(), max.z()), dy, -dz, mat)); //right
+    box->add(std::make_shared<Quad>(Point3(min.x(), min.y(), min.z()), dy, dz, mat)); //left
+    box->add(std::make_shared<Quad>(Point3(max.x(), min.y(), min.z()), dy, -dx, mat)); //back
+    box->add(std::make_shared<Quad>(Point3(min.x(), min.y(), min.z()), dx, dz, mat)); //front
+
+    return box;
+}

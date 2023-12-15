@@ -14,6 +14,11 @@ public:
     virtual ~Material() = default;
 
     virtual bool scatter(const Ray &ray_in, hit_info &info, Color &attenuation, Ray &scattered) const = 0;
+
+    virtual Color emitted(double u, double v, const Point3 &p) const
+    {
+        return Color(0, 0, 0);
+    }
 };
 
 class Lambertian : public Material
@@ -65,19 +70,20 @@ class Dielectric : public Material
 {
 public:
     Dielectric(double refractive_index) : eta(refractive_index) {}
-    bool scatter(const Ray &ray_in, hit_info &info, Color &attenuation, Ray &scattered) const override {
-        //always refracts
+    bool scatter(const Ray &ray_in, hit_info &info, Color &attenuation, Ray &scattered) const override
+    {
+        // always refracts
         attenuation = Color(1.0, 1.0, 1.0);
-        double refractive_ibyr = info.front_face ? 1.0/eta : eta;
-        //calculations expect unit vector
+        double refractive_ibyr = info.front_face ? 1.0 / eta : eta;
+        // calculations expect unit vector
         vec3 unit_dir = normalize(ray_in.direction());
-        //to check for TIR
+        // to check for TIR
         double cos_theta = fmin(-unit_dir.dot(info.normal), 1.0);
-        double sin_theta = sqrt(1 - cos_theta*cos_theta);
+        double sin_theta = sqrt(1 - cos_theta * cos_theta);
 
         bool cannot_refract = refractive_ibyr * sin_theta > 1.0;
         vec3 scattered_direction;
-        if(cannot_refract || reflectance(cos_theta, refractive_ibyr) > randomDouble())
+        if (cannot_refract || reflectance(cos_theta, refractive_ibyr) > randomDouble())
         {
             scattered_direction = reflect(unit_dir, info.normal);
         }
@@ -85,7 +91,7 @@ public:
         {
             scattered_direction = refract(unit_dir, info.normal, refractive_ibyr);
         }
-        scattered = Ray(info.p, scattered_direction, ray_in.time()); 
+        scattered = Ray(info.p, scattered_direction, ray_in.time());
         return true;
     }
 
@@ -95,7 +101,40 @@ private:
     static double reflectance(double cos, double ri)
     {
         auto r0 = (1 - ri) / (1 + ri);
-        r0 = r0*r0;
-        return r0 + (1-r0)*pow((1-cos), 5);
+        r0 = r0 * r0;
+        return r0 + (1 - r0) * pow((1 - cos), 5);
     }
+};
+
+class DiffuseLight : public Material
+{
+public:
+    DiffuseLight(std::shared_ptr<Texture> _emit) : emit(_emit) {}
+    bool scatter(const Ray &ray_in, hit_info &info, Color &attenuation, Ray &scattered) const override
+    {
+        return false;
+    }
+    Color emitted(double u, double v, const Point3 &p) const override
+    {
+        return emit->value(u, v, p);
+    }
+
+private:
+    std::shared_ptr<Texture> emit;
+};
+
+class Isotropic : public Material {
+public:
+    Isotropic(Color c) : albedo(std::make_shared<SolidColor>(c)) {}
+    Isotropic(std::shared_ptr<Texture> a) : albedo(a) {}
+
+    bool scatter(const Ray &ray_in, hit_info &info, Color &attenuation, Ray &scattered) const override
+    {
+        //random unit vector scattered in any direction from point of contact
+        scattered = Ray(info.p, randomUnitVec(), ray_in.time());
+        attenuation = albedo -> value(info.u, info.v, info.p);
+        return true;
+    }
+    private:
+    std::shared_ptr<Texture> albedo;
 };

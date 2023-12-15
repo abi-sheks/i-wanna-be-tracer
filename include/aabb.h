@@ -74,3 +74,13 @@ public:
         return true;
     }
 };
+
+AABB operator+(AABB bbox, const vec3& offset)
+{
+    return AABB(bbox.x + offset.x(),bbox.y + offset.y(), bbox.z + offset.z());
+}
+
+AABB operator+(const vec3& offset, AABB bbox)
+{
+    return bbox + offset;
+}

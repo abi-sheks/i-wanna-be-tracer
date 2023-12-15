@@ -1,5 +1,6 @@
 #include <iostream>
 #include <memory>
+#include "volume.h"
 #include "camera.h"
 #include "texture.h"
 #include "sphere.h"
@@ -82,7 +83,7 @@ void finalBookOneScene()
     // Camera camera = Camera();
 
     // for final render
-    Camera camera = Camera(16.0 / 9.0, 400, 400, 100, 20.0, Point3(13, 2, 3), Point3(0, 0, 0), vec3(0, 1, 0), 0.6, 10.0);
+    Camera camera = Camera(16.0 / 9.0, 400, 400, 100, 20.0, Point3(13, 2, 3), Point3(0, 0, 0), vec3(0, 1, 0), 0.6, 10.0, Color(0.7, 0.8, 1.0));
     camera.render(world);
 }
 
@@ -95,21 +96,8 @@ void twoSpheres()
     world.add(std::make_shared<Sphere>(Point3(0, -10, 0), 10, std::make_shared<Lambertian>(checker)));
     world.add(std::make_shared<Sphere>(Point3(0, 10, 0), 10, std::make_shared<Lambertian>(checker)));
 
-    Camera cam;
-
-    cam.aspect_ratio = 16.0 / 9.0;
-    cam.img_width = 400;
-    cam.samples_per_pixel = 100;
-    cam.max_depth = 50;
-
-    cam.vfov = 20;
-    cam.lookFrom = Point3(13, 2, 3);
-    cam.lookAt = Point3(0, 0, 0);
-    cam.vup = vec3(0, 1, 0);
-
-    cam.defocus_angle = 0;
-
-    cam.render(world);
+    Camera camera(16.0 / 9.0, 400, 100, 50, 20, Point3(13, 2, 3), Point3(0, 0, 0), vec3(0, 1, 0), 0, 10, Color(0.7, 0.8, 1.0));
+    camera.render(world);
 }
 void earth()
 {
@@ -118,21 +106,8 @@ void earth()
     auto globe = std::make_shared<Sphere>(Point3(0, 0, 0), 2, earth_surface);
     auto world = HittableArray(globe);
 
-    Camera cam;
-
-    cam.aspect_ratio = 16.0 / 9.0;
-    cam.img_width = 400;
-    cam.samples_per_pixel = 100;
-    cam.max_depth = 50;
-
-    cam.vfov = 20;
-    cam.lookFrom = Point3(0, 0, 12);
-    cam.lookAt = Point3(0, 0, 0);
-    cam.vup = vec3(0, 1, 0);
-
-    cam.defocus_angle = 0;
-
-    cam.render(world);
+    Camera camera(16.0 / 9.0, 400, 100, 50, 20, Point3(0, 0, 12), Point3(0, 0, 0), vec3(0, 1, 0), 0, 10, Color(0.7, 0.8, 1.0));
+    camera.render(world);
 }
 
 void perlinSphere()
@@ -143,21 +118,8 @@ void perlinSphere()
     world.add(std::make_shared<Sphere>(Point3(0, -1000, 0), 1000, std::make_shared<Lambertian>(pertext)));
     world.add(std::make_shared<Sphere>(Point3(0, 2, 0), 2, std::make_shared<Lambertian>(pertext)));
 
-    Camera cam;
-
-    cam.aspect_ratio = 16.0 / 9.0;
-    cam.img_width = 400;
-    cam.samples_per_pixel = 100;
-    cam.max_depth = 50;
-
-    cam.vfov = 20;
-    cam.lookFrom = Point3(13, 2, 3);
-    cam.lookAt = Point3(0, 0, 0);
-    cam.vup = vec3(0, 1, 0);
-
-    cam.defocus_angle = 0;
-
-    cam.render(world);
+    Camera camera(16.0 / 9.0, 400, 100, 50, 20, Point3(13, 2, 3), Point3(0, 0, 0), vec3(0, 1, 0), 0, 10, Color(0.7, 0.8, 1.0));
+    camera.render(world);
 }
 void quads()
 {
@@ -177,26 +139,151 @@ void quads()
     world.add(std::make_shared<Quad>(Point3(-2, 3, 1), vec3(4, 0, 0), vec3(0, 0, 4), upper_orange));
     world.add(std::make_shared<Quad>(Point3(-2, -3, 5), vec3(4, 0, 0), vec3(0, 0, -4), lower_teal));
 
-    Camera cam;
-
-    cam.aspect_ratio = 1.0;
-    cam.img_width = 400;
-    cam.samples_per_pixel = 100;
-    cam.max_depth = 50;
-
-    cam.vfov = 80;
-    cam.lookFrom = Point3(0, 0, 9);
-    cam.lookAt = Point3(0, 0, 0);
-    cam.vup = vec3(0, 1, 0);
-
-    cam.defocus_angle = 0;
-
-    cam.render(world);
+    Camera camera(1.0, 400, 100, 50, 80, Point3(0, 0, 9), Point3(0, 0, 0), vec3(0, 1, 0), 0, 10, Color(0.7, 0.8, 1.0));
+    camera.render(world);
 }
+void simpleLight()
+{
+    HittableArray world;
 
+    auto pertext = std::make_shared<NoiseTexture>(4);
+    world.add(std::make_shared<Sphere>(Point3(0, -1000, 0), 1000, std::make_shared<Lambertian>(pertext)));
+    world.add(std::make_shared<Sphere>(Point3(0, 2, 0), 2, std::make_shared<Lambertian>(pertext)));
+
+    auto difflight = std::make_shared<DiffuseLight>(std::make_shared<SolidColor>(Color(4, 4, 4)));
+    world.add(std::make_shared<Sphere>(Point3(0, 7, 0), 2, difflight));
+    world.add(std::make_shared<Quad>(Point3(3, 1, -2), vec3(2, 0, 0), vec3(0, 2, 0), difflight));
+
+    Camera camera(16.0 / 9.0, 400, 100, 50, 20, Point3(26, 3, 6), Point3(0, 2, 0), vec3(0, 1, 0), 0, 10, Color(0, 0, 0));
+    camera.render(world);
+}
+void cornellBox()
+{
+    HittableArray world;
+
+    auto red = std::make_shared<Lambertian>(Color(.65, .05, .05));
+    auto white = std::make_shared<Lambertian>(Color(.73, .73, .73));
+    auto green = std::make_shared<Lambertian>(Color(.12, .45, .15));
+    auto light = std::make_shared<DiffuseLight>(std::make_shared<SolidColor>(Color(15, 15, 15)));
+
+    world.add(std::make_shared<Quad>(Point3(555, 0, 0), vec3(0, 555, 0), vec3(0, 0, 555), green));
+    world.add(std::make_shared<Quad>(Point3(0, 0, 0), vec3(0, 555, 0), vec3(0, 0, 555), red));
+    world.add(std::make_shared<Quad>(Point3(343, 554, 332), vec3(-130, 0, 0), vec3(0, 0, -105), light));
+    world.add(std::make_shared<Quad>(Point3(0, 0, 0), vec3(555, 0, 0), vec3(0, 0, 555), white));
+    world.add(std::make_shared<Quad>(Point3(555, 555, 555), vec3(-555, 0, 0), vec3(0, 0, -555), white));
+    world.add(std::make_shared<Quad>(Point3(0, 0, 555), vec3(555, 0, 0), vec3(0, 555, 0), white));
+
+    std::shared_ptr<Hittable> box1 = box(Point3(0, 0, 0), Point3(165, 330, 165), white);
+    box1 = std::make_shared<RotateY>(15, box1);
+    box1 = std::make_shared<Translate>(box1, vec3(265, 0, 295));
+    world.add(box1);
+
+    std::shared_ptr<Hittable> box2 = box(Point3(0, 0, 0), Point3(165, 165, 165), white);
+    box2 = std::make_shared<RotateY>(-18, box2);
+    box2 = std::make_shared<Translate>(box2, vec3(130, 0, 65));
+    world.add(box2);
+
+    Camera camera(1.0, 600, 100, 50, 40, Point3(278, 278, -800), Point3(278, 278, 0), vec3(0, 1, 0), 0, 10, Color(0, 0, 0));
+    camera.render(world);
+}
+void cornellSmoke()
+{
+    HittableArray world;
+
+    auto red = std::make_shared<Lambertian>(Color(.65, .05, .05));
+    auto white = std::make_shared<Lambertian>(Color(.73, .73, .73));
+    auto green = std::make_shared<Lambertian>(Color(.12, .45, .15));
+    auto light = std::make_shared<DiffuseLight>(std::make_shared<SolidColor>(Color(7, 7, 7)));
+
+    world.add(std::make_shared<Quad>(Point3(555, 0, 0), vec3(0, 555, 0), vec3(0, 0, 555), green));
+    world.add(std::make_shared<Quad>(Point3(0, 0, 0), vec3(0, 555, 0), vec3(0, 0, 555), red));
+    world.add(std::make_shared<Quad>(Point3(113, 554, 127), vec3(330, 0, 0), vec3(0, 0, 305), light));
+    world.add(std::make_shared<Quad>(Point3(0, 555, 0), vec3(555, 0, 0), vec3(0, 0, 555), white));
+    world.add(std::make_shared<Quad>(Point3(0, 0, 0), vec3(555, 0, 0), vec3(0, 0, 555), white));
+    world.add(std::make_shared<Quad>(Point3(0, 0, 555), vec3(555, 0, 0), vec3(0, 555, 0), white));
+
+    std::shared_ptr<Hittable> box1 = box(Point3(0, 0, 0), Point3(165, 330, 165), white);
+    box1 = std::make_shared<RotateY>(15, box1);
+    box1 = std::make_shared<Translate>(box1, vec3(265, 0, 295));
+
+    std::shared_ptr<Hittable> box2 = box(Point3(0, 0, 0), Point3(165, 165, 165), white);
+    box2 = std::make_shared<RotateY>(-18, box2);
+    box2 = std::make_shared<Translate>(box2, vec3(130, 0, 65));
+
+    world.add(std::make_shared<ConstantMedium>(box1, 0.01, Color(0, 0, 0)));
+    world.add(std::make_shared<ConstantMedium>(box2, 0.01, Color(1, 1, 1)));
+
+    Camera camera(1.0, 600, 200, 50, 40, Point3(28, 278, -800), Point3(278, 278, 0), vec3(0, 1, 0), 0, 10, Color(0, 0, 0));
+    camera.render(world);
+}
+void finalBookTwoScene()
+{
+    HittableArray boxes1;
+    auto ground = std::make_shared<Lambertian>(Color(0.48, 0.83, 0.53));
+
+    int boxes_per_side = 20;
+    for (int i = 0; i < boxes_per_side; i++)
+    {
+        for (int j = 0; j < boxes_per_side; j++)
+        {
+            auto w = 100.0;
+            auto x0 = -1000.0 + i * w;
+            auto z0 = -1000.0 + j * w;
+            auto y0 = 0.0;
+            auto x1 = x0 + w;
+            auto y1 = randomDouble(1, 101);
+            auto z1 = z0 + w;
+
+            boxes1.add(box(Point3(x0, y0, z0), Point3(x1, y1, z1), ground));
+        }
+    }
+
+    HittableArray world;
+
+    world.add(std::make_shared<BVHNode>(boxes1));
+
+    auto light = std::make_shared<DiffuseLight>(std::make_shared<SolidColor>(Color(7, 7, 7)));
+    world.add(std::make_shared<Quad>(Point3(123, 554, 147), vec3(300, 0, 0), vec3(0, 0, 265), light));
+
+    auto center1 = Point3(400, 400, 200);
+    auto center2 = center1 + vec3(30, 0, 0);
+    auto sphere_material = std::make_shared<Lambertian>(Color(0.7, 0.3, 0.1));
+    world.add(std::make_shared<Sphere>(center1, center2, 50, sphere_material));
+
+    world.add(std::make_shared<Sphere>(Point3(260, 150, 45), 50, std::make_shared<Dielectric>(1.5)));
+    world.add(std::make_shared<Sphere>(
+        Point3(0, 150, 145), 50, std::make_shared<Metal>(Color(0.8, 0.8, 0.9), 1.0)));
+
+    auto boundary = std::make_shared<Sphere>(Point3(360, 150, 145), 70, std::make_shared<Dielectric>(1.5));
+    world.add(boundary);
+    world.add(std::make_shared<ConstantMedium>(boundary, 0.2, Color(0.2, 0.4, 0.9)));
+    boundary = std::make_shared<Sphere>(Point3(0, 0, 0), 5000, std::make_shared<Dielectric>(1.5));
+    world.add(std::make_shared<ConstantMedium>(boundary, .0001, Color(1, 1, 1)));
+
+    auto emat = std::make_shared<Lambertian>(std::make_shared<ImageTexture>("earthmap.jpg"));
+    world.add(std::make_shared<Sphere>(Point3(400, 200, 400), 100, emat));
+    auto pertext = std::make_shared<NoiseTexture>(0.1);
+    world.add(std::make_shared<Sphere>(Point3(220, 280, 300), 80, std::make_shared<Lambertian>(pertext)));
+
+    HittableArray boxes2;
+    auto white = std::make_shared<Lambertian>(Color(.73, .73, .73));
+    int ns = 100;
+    for (int j = 0; j < ns; j++)
+    {
+        boxes2.add(std::make_shared<Sphere>(Point3::random(0, 165), 10, white));
+    }
+
+    world.add(std::make_shared<Translate>(
+        std::make_shared<RotateY>(15,
+                                  std::make_shared<BVHNode>(boxes2)),
+        vec3(-100, 270, 395)));
+
+    Camera camera(1.0, 400, 100, 4, 40, Point3(478, 278, -600), Point3(278, 278, 0), vec3(0, 1, 0), 0, 10, Color(0, 0, 0));
+    camera.render(world);
+}
 int main()
 {
-    switch (5)
+    switch (9)
     {
     case 1:
         finalBookOneScene();
@@ -212,6 +299,18 @@ int main()
         break;
     case 5:
         quads();
+        break;
+    case 6:
+        simpleLight();
+        break;
+    case 7:
+        cornellBox();
+        break;
+    case 8:
+        cornellSmoke();
+        break;
+    case 9:
+        finalBookTwoScene();
         break;
     }
 }

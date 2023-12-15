@@ -18,22 +18,25 @@ public:
     int max_depth = 20;
     double vfov = 20.0;
     Point3 lookFrom = Point3(-2, 2, 1); // Point camera is looking from
-    Point3 lookAt = Point3(0, 0, -1);    // Point camera is looking at
+    Point3 lookAt = Point3(0, 0, -1);   // Point camera is looking at
     vec3 vup = vec3(0, 1, 0);
     double defocus_angle = 0;
     double focus_distance = 10;
+    Color background;
 
     Camera() {}
-    Camera(double _ar, int _img_width, int _samples_per_pixel, int _max_depth, double _vfov, Point3 _lookFrom, Point3 _lookAt, vec3 _vup, double _da, double _fd) :                                                                         aspect_ratio(_ar), 
-                                                                                               img_width(_img_width),
-                                                                                               samples_per_pixel(_samples_per_pixel),
-                                                                                               max_depth(_max_depth),
-                                                                                               vfov(_vfov),
-                                                                                               lookFrom(_lookFrom),
-                                                                                               lookAt(_lookAt),
-                                                                                               vup(_vup),
-                                                                                               defocus_angle(_da),
-                                                                                               focus_distance(_fd) {}
+    Camera(double _ar, int _img_width, int _samples_per_pixel, int _max_depth, double _vfov, Point3 _lookFrom, Point3 _lookAt, vec3 _vup, double _da, double _fd, Color _background) : aspect_ratio(_ar),
+                                                                                                                                                                    img_width(_img_width),
+                                                                                                                                                                    samples_per_pixel(_samples_per_pixel),
+                                                                                                                                                                    max_depth(_max_depth),
+                                                                                                                                                                    vfov(_vfov),
+                                                                                                                                                                    lookFrom(_lookFrom),
+                                                                                                                                                                    lookAt(_lookAt),
+                                                                                                                                                                    vup(_vup),
+                                                                                                                                                                    defocus_angle(_da),
+                                                                                                                                                                    focus_distance(_fd) ,
+                                                                                                                                                                    background(_background)
+                                                                                                                                                                    {}
 
     void render(Hittable &world)
     {
@@ -68,7 +71,7 @@ private:
     vec3 pixel_distance_u; // Offset to pixel to the right
     vec3 pixel_distance_v; // Offset to pixel below
 
-    //defocus disk
+    // defocus disk
     vec3 defocus_disk_u;
     vec3 defocus_disk_v;
 
@@ -106,7 +109,7 @@ private:
         auto viewport_upleft_edge = camera_center - (focus_distance * w) - (viewport_u / 2) - (viewport_v / 2); // in basic view w is (0, 0, 1)
         pixel_top_left = viewport_upleft_edge + (0.5 * pixel_distance_u) + (0.5 * pixel_distance_v);
 
-        //defocus disk basis vectors
+        // defocus disk basis vectors
         auto defocus_radius = focus_distance * tan(degreeToRadians(defocus_angle / 2));
         defocus_disk_u = u * defocus_radius;
         defocus_disk_v = v * defocus_radius;
@@ -123,27 +126,24 @@ private:
         // interval starts from small t to fix shadow acne
         // shadow acne was actually the issue causing major runtime lag and visual defect for me.
         // reintersection is a bitch.
-        if (world.hit(r, Interval(0.001, infinity), info))
+        if (!world.hit(r, Interval(0.001, infinity), info))
         {
-            // understand the geometric meaning of this recursive call, basically how the rays travel on each rayColor
-            // first call from render will give ray bw camera and sample point
-            // this internal call simulates the ray bouncing off randomly. It'll most probably not collide elsewhere so it'll move on to the
-            // below lerp and provide a color based on its random y value.
-            Ray scattered;
-            Color attenuation; // learn what these are in depth asap
-            // so for lambertian, we took attenuation = 0.5, scattered ofc based on principle
-            if (info.mat->scatter(r, info, attenuation, scattered))
-            {
-                return attenuation * rayColor(scattered, depth - 1, world);
-            }
-            return Color(0, 0, 0);
+            return background;
         }
-        // lerps based on y value
-        vec3 unit_direction = normalize(r.direction());
-        // for parameter a
-        auto a = 0.5 * (unit_direction.y() + 1.0);
-        // start color (a = 0) - white, end color (a = 1) - blue
-        return (1.0 - a) * Color(1.0, 1.0, 1.0) + a * Color(0.5, 0.7, 1.0);
+        // understand the geometric meaning of this recursive call, basically how the rays travel on each rayColor
+        // first call from render will give ray bw camera and sample point
+        // this internal call simulates the ray bouncing off randomly. It'll most probably not collide elsewhere so it'll move on to the
+        // below lerp and provide a color based on its random y value.
+        Ray scattered;
+        Color attenuation; // learn what these are in depth asap
+        // so for lambertian, we took attenuation = 0.5, scattered ofc based on principle
+        Color emitted_color = info.mat->emitted(info.u, info.v, info.p);
+        if (!info.mat->scatter(r, info, attenuation, scattered))
+        {
+            return emitted_color;
+        }
+        Color scattered_color = attenuation * rayColor(scattered, depth - 1, world);
+        return emitted_color + scattered_color;
     }
 
     Ray getRay(int i, int j)
@@ -152,10 +152,10 @@ private:
         auto pixel_center = pixel_top_left + (i * pixel_distance_u) + (j * pixel_distance_v);
         auto pixel_sample = pixel_center + pixelSampleSquare();
 
-        //gets a random point on defocus disk, or camera center if angle <= 0.
+        // gets a random point on defocus disk, or camera center if angle <= 0.
         auto origin = (defocus_angle <= 0) ? camera_center : defocusDiskSample();
         auto direction_from_cam = pixel_sample - camera_center;
-        //sends out rays at random times
+        // sends out rays at random times
         auto ray_time = randomDouble();
         return Ray(origin, direction_from_cam, ray_time);
     }
@@ -166,7 +166,8 @@ private:
         auto py = -0.5 + randomDouble();
         return (px * pixel_distance_u) + (py * pixel_distance_v);
     }
-        Point3 defocusDiskSample() const {
+    Point3 defocusDiskSample() const
+    {
         // Returns a random point in the camera defocus disk.
         auto p = randomInUnitDisk();
         return camera_center + (p[0] * defocus_disk_u) + (p[1] * defocus_disk_v);
